@@ -1,10 +1,28 @@
 return {
     "hrsh7th/nvim-cmp",
+    priority = 1000, -- 高い優先度で読み込む（cmp-nvim-lspより先に）
+    dependencies = {
+        "L3MON4D3/LuaSnip",       -- スニペットエンジン
+        "saadparwaiz1/cmp_luasnip", -- nvim-cmp と LuaSnip の連携（アンダースコア）
+        "hrsh7th/cmp-buffer",     -- バッファからの候補
+        "hrsh7th/cmp-path",       -- パスからの候補
+    },
     config = function()
+        -- nvim-cmpを初期化
         local cmp = require('cmp')
         local luasnip = require('luasnip')
+        
+        -- LuaSnipの設定
+        require('luasnip.loaders.from_vscode').lazy_load()
 
+        -- nvim-cmpの初期化を先に行う
         cmp.setup({
+            -- 補完を有効化
+            enabled = true,
+            -- 補完の自動表示設定
+            completion = {
+                keyword_length = 1, -- 1文字入力で補完を開始
+            },
             -- 補完ウィンドウの見た目や動作を設定
             snippet = {
                 expand = function(args)
@@ -45,10 +63,28 @@ return {
                 { name = 'buffer' },    -- バッファ内の単語からの候補
                 { name = 'path' },      -- ファイルパスからの候補
             }),
-            -- その他、アイコン表示などの微調整
+            -- 補完ウィンドウの見た目を改善
             formatting = {
-
-            }
+                format = function(entry, vim_item)
+                    -- 補完ソースの種類を表示
+                    vim_item.menu = ({
+                        nvim_lsp = "[LSP]",
+                        luasnip = "[Snippet]",
+                        buffer = "[Buffer]",
+                        path = "[Path]",
+                    })[entry.source.name]
+                    return vim_item
+                end,
+            },
+            -- 補完ウィンドウの見た目
+            window = {
+                completion = cmp.config.window.bordered(),
+                documentation = cmp.config.window.bordered(),
+            },
+            -- 補完の動作設定
+            experimental = {
+                ghost_text = true, -- プレビューテキストを表示
+            },
         })
     end
 }
