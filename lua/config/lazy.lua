@@ -15,6 +15,15 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
+  "neovim/nvim-lspconfig",
+  "williamboman/mason.nvim",
+  "williamboman/mason-lspconfig.nvim",
+  "hrsh7th/nvim-cmp",      -- **これが補完プラグイン本体**
+  "hrsh7th/cmp-nvim-lsp",  -- LSPからの候補を取得するソース
+  "L3MON4D3/LuaSnip",      -- スニペット（コード片の自動挿入）エンジン
+  "saadparwaiz1/cmp-luasnip", -- nvim-cmp と LuaSnip の連携
+  "hrsh7th/cmp-buffer",    -- 現在のバッファからの補完ソース
+  "hrsh7th/cmp-path",      -- ファイルパスの補完ソース
   spec = {
     --{ "LazyVim/LazyVim", import = "lazyvim.plugins" },
     { import = "plugins" },
