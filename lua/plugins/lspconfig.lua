@@ -80,7 +80,27 @@ return {
       end,
     })
 
+    -- HTML Language Server の設定
+    vim.lsp.config('html', {
+      on_attach = lsp_defaults.on_attach,
+      capabilities = lsp_defaults.get_capabilities(),
+      filetypes = { "html", "htm" },
+      settings = {
+        html = {
+          format = {
+            wrapLineLength = 120,
+            wrapAttributes = "auto",
+          },
+          hover = {
+            documentation = true,
+            references = true,
+          },
+        },
+      },
+    })
+
     -- LSPサーバーを有効化
     vim.lsp.enable('ts_ls')
+    vim.lsp.enable('html')
   end,
 }

@@ -1,0 +1,114 @@
+-- プロジェクト固有のNeovim設定ファイル
+-- このファイルをプロジェクトルートに `.nvim.lua` として配置してください
+
+-- Telescopeの設定を変更
+vim.g.project_telescope_config = {
+  defaults = {
+    file_ignore_patterns = {
+      "node_modules/",
+      ".git/",
+      ".next/",
+      ".cache/",
+      "dist/",
+      "build/",
+      ".DS_Store",
+      "%.lock",
+      -- プロジェクト固有の無視パターンを追加
+      -- 例: "特定のディレクトリ/",
+      
+      -- ワイルドカードパターンの例（Luaパターンマッチング）
+      -- a/**/b/ のようなパターンは以下のように記述します
+      -- "a/.*/b/",        -- a/ と b/ の間に任意の階層（0文字以上）
+      -- "a/.+/b/",        -- a/ と b/ の間に任意の階層（1文字以上）
+      -- "src/.*/test/",   -- src/ 配下の任意の階層にある test/ ディレクトリ
+      -- ".*/build/.*",    -- 任意の場所にある build/ ディレクトリとその配下
+      -- "packages/.*/dist/", -- packages/ 配下の任意の階層にある dist/ ディレクトリ
+    },
+    hidden = false, -- 隠しファイルを非表示
+    no_ignore = false, -- .gitignoreを尊重
+  },
+  pickers = {
+    find_files = {
+      hidden = false,
+      no_ignore = false,
+    },
+    live_grep = {
+      additional_args = {}, -- デフォルトの引数を使用
+    },
+  },
+}
+
+-- nvim-treeの設定を変更
+vim.g.project_tree_config = {
+  git = {
+    enable = false, -- gitの状態を表示しない
+    ignore = true, -- gitignoreを尊重
+  },
+  filters = {
+    dotfiles = true, -- ドットファイルを非表示
+    git_clean = false,
+    no_buffer = false,
+    custom = {
+      -- プロジェクト固有のフィルタを追加（Luaパターンマッチング）
+      -- ファイル名の先頭からマッチするので ^ を使うことが多いです
+      -- 例: "^%.env",
+      
+      -- ワイルドカードパターンの例
+      -- a/**/b/ のようなパターンは以下のように記述します
+      -- "^a/.*/b/",       -- a/ で始まり、任意の階層を経て b/ を含むパス
+      -- "^src/.*/test/",  -- src/ で始まり、任意の階層を経て test/ を含むパス
+      -- "%.lock$",        -- .lock で終わるファイル
+      -- "^%.cache/",      -- .cache/ で始まるパス
+      -- "^node_modules/.*/dist/", -- node_modules/ 配下の任意の階層にある dist/
+    },
+  },
+  renderer = {
+    group_empty = true,
+    icons = {
+      show = {
+        git = false, -- gitアイコンを非表示
+      },
+    },
+  },
+}
+
+-- プラグインが既に読み込まれている場合は再設定
+vim.schedule(function()
+  local telescope = require('telescope')
+  if telescope then
+    telescope.setup(vim.g.project_telescope_config or {})
+  end
+  
+  local nvim_tree = require('nvim-tree')
+  if nvim_tree then
+    nvim_tree.setup(vim.g.project_tree_config or {})
+  end
+end)
+
+--[[
+ワイルドカードパターンについて:
+================================
+
+Telescopeとnvim-treeはLuaパターンマッチングを使用します。
+globパターンの `**` は直接使えませんが、以下のように表現できます:
+
+1. `a/**/b/` → `a/.*/b/` または `a/.+/b/`
+   - `.*` : 0文字以上の任意の文字（任意の階層）
+   - `.+` : 1文字以上の任意の文字（1階層以上）
+
+2. パターンの特殊文字:
+   - `.` → `%.` (エスケープが必要)
+   - `*` → `.*` (0文字以上の任意の文字)
+   - `+` → `.+` (1文字以上の任意の文字)
+   - `^` : 文字列の先頭
+   - `$` : 文字列の末尾
+
+3. よく使うパターン例:
+   - `src/**/test/` → `src/.*/test/`
+   - `**/node_modules/` → `.*/node_modules/`
+   - `packages/*/dist/` → `packages/.+/dist/` (1階層のみ)
+   - `**/*.lock` → `.*/.*%.lock$`
+
+注意: nvim-treeの `filters.custom` はファイル名に対してマッチするため、
+      パス全体をマッチさせたい場合は `^` で始めることを推奨します。
+]]
