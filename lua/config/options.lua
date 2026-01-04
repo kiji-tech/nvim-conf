@@ -11,7 +11,8 @@ vim.o.tabstop = 2
 vim.o.shiftwidth = 2
 
 -- シンタックスハイライトを有効化
-vim.cmd("syntax on")
+-- treesitterを使用するため、syntax onはコメントアウト（treesitterが優先される）
+-- vim.cmd("syntax on")
 vim.cmd("filetype plugin indent on")
 
 -- カラースキームを設定（テーマプラグインが読み込まれる前に基本設定）

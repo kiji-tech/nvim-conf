@@ -4,8 +4,10 @@ return {
   config = function()
     require("mason-lspconfig").setup({
       -- 自動インストールするLSPサーバーのリスト
+      -- 注: Masonでは ts_ls (typescript-language-server) という名前で管理されます
+      -- しかし、lspconfigでは tsserver として設定します
       ensure_installed = {
-        "ts_ls",  -- TypeScript/JavaScript LSP (tsserverから変更)
+        "ts_ls",  -- TypeScript/JavaScript LSP (typescript-language-server)
         "lua_ls", -- Lua LSP
         "html",   -- HTML LSP
       },

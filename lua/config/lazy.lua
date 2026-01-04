@@ -26,5 +26,3 @@ require("lazy").setup({
     enabled = true, -- check for plugin updates periodically
   },
 })
-
-vim.lsp.enable("golangci_lint")

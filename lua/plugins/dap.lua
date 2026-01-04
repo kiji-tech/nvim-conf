@@ -114,7 +114,8 @@ return {
       dap.step_out()
     end, { desc = "Debug: Step Out" })
     
-    vim.keymap.set("n", "<leader>b", function()
+    -- ブレークポイントのトグル（treeの<leader>bと競合しないように別のキーを使用）
+    vim.keymap.set("n", "<leader>db", function()
       dap.toggle_breakpoint()
     end, { desc = "Debug: Toggle Breakpoint" })
     
