@@ -28,6 +28,8 @@ map('i', '<C-l>', '<Right>', {})
 
 -- show diagnostics
 map('n', '<Leader>d', ':lua vim.diagnostic.open_float()<CR>', {noremap = true})
+map('n', ']d', ':lua vim.diagnostic.goto_next()<CR>', {noremap = true, silent = true})
+map('n', '[d', ':lua vim.diagnostic.goto_prev()<CR>', {noremap = true, silent = true})
 
 
 -- rebind embeded comand

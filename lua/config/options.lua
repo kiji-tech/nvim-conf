@@ -7,13 +7,15 @@ vim.g.maplocalleader = "\\"
 
 -- タブのサイズを4文字に変更
 vim.o.expandtab = true
-vim.o.tabstop = 4
-vim.o.shiftwidth = 4
+vim.o.tabstop = 2
+vim.o.shiftwidth = 2
 
 -- シンタックスハイライトを有効化
-vim.cmd('syntax on')
-vim.cmd('filetype plugin indent on')
+vim.cmd("syntax on")
+vim.cmd("filetype plugin indent on")
 
 -- カラースキームを設定（テーマプラグインが読み込まれる前に基本設定）
 vim.o.termguicolors = true -- 24bitカラーを有効化
 
+-- clip board
+vim.o.clipboard = "unnamedplus"

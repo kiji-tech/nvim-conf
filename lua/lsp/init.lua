@@ -26,6 +26,28 @@ local on_attach = function(client, bufnr)
     map('n', '<leader>f', function()
         vim.lsp.buf.format({ async = true })
     end, { buffer = bufnr, desc = 'Format Buffer' })
+    
+    -- より覚えやすいキーマッピング（定義にジャンプ）
+    -- 注: <leader>g は Telescope の live_grep で使用されているため、<leader>jd (jump definition) を使用
+    map('n', '<leader>jd', vim.lsp.buf.definition, { buffer = bufnr, desc = 'Go to Definition' })
+    map('n', '<C-]>', vim.lsp.buf.definition, { buffer = bufnr, desc = 'Go to Definition' })
+    
+    -- Telescopeで定義を選択（複数の定義がある場合や、プレビューしたい場合）
+    map('n', '<leader>jD', function()
+        local ok, telescope = pcall(require, 'telescope.builtin')
+        if ok then
+            telescope.lsp_definitions()
+        else
+            vim.lsp.buf.definition()
+        end
+    end, { buffer = bufnr, desc = 'Telescope: Go to Definition' })
+    
+    -- 戻るキー（ジャンプ履歴）
+    map('n', '<C-t>', '<C-o>', { buffer = bufnr, desc = 'Go Back (Jump List)' })
+    map('n', '<leader><C-o>', '<C-o>', { buffer = bufnr, desc = 'Go Back (Jump List)' })
+    
+    -- 進むキー（ジャンプ履歴）
+    map('n', '<leader><C-i>', '<C-i>', { buffer = bufnr, desc = 'Go Forward (Jump List)' })
 end
 
 -- モジュールとしてエクスポート
