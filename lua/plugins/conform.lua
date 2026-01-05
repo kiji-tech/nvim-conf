@@ -36,16 +36,8 @@ return {
       -- フォーマッターの設定
       formatters = {
         prettier = {
-          prepend_args = {
-            "--print-width",
-            "100",
-            "--tab-width",
-            "2",
-            "--single-quote",
-            "true",
-            "--trailing-comma",
-            "es5",
-          },
+          -- .prettierrcを自動的に読み込むようにする
+          -- prepend_argsを削除することで、Prettierがプロジェクトの.prettierrcを自動検出
         },
       },
     })

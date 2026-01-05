@@ -66,6 +66,7 @@ return {
       update_focused_file = {
         enable = true,
         update_root = false,
+        update_cwd = false,
       },
     }
     
@@ -144,5 +145,54 @@ return {
     
     -- 起動時にも透過設定を適用
     vim.schedule(setup_tree_transparency)
+    
+    -- ファイルを開いたときにツリーを展開する
+    local function expand_to_file(filepath)
+      if not filepath or filepath == "" then
+        return
+      end
+      
+      -- nvim-treeが開いているか確認
+      local tree_win = api.tree.winid()
+      if not tree_win or not vim.api.nvim_win_is_valid(tree_win) then
+        return
+      end
+      
+      -- ファイルパスを正規化
+      local normalized_file = vim.fs.normalize(filepath)
+      
+      -- api.tree.find_fileを使ってファイルを検索して展開
+      local success, node = pcall(function()
+        return api.tree.find_file(normalized_file)
+      end)
+      
+      if success and node then
+        -- 親ディレクトリを再帰的に展開
+        local function expand_parents(n)
+          if n and n.parent then
+            expand_parents(n.parent)
+            if n.parent.type == "directory" then
+              api.node.expand(n.parent)
+            end
+          end
+        end
+        expand_parents(node)
+      end
+    end
+    
+    vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+      callback = function(args)
+        local buf = args.buf
+        local file = vim.api.nvim_buf_get_name(buf)
+        if file == "" or vim.bo[buf].filetype == "NvimTree" then
+          return
+        end
+        
+        -- nvim-treeが完全に初期化されるまで待つ
+        vim.schedule(function()
+          expand_to_file(file)
+        end)
+      end,
+    })
   end,
 }
