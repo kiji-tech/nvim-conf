@@ -68,6 +68,11 @@ return {
         update_root = false,
         update_cwd = false,
       },
+      actions = {
+        open_file = {
+          quit_on_open = false,
+        },
+      },
     }
     
     -- プロジェクト固有の設定があればマージ
@@ -80,7 +85,7 @@ return {
     -- 幅を変更するキーマッピングを明示的に設定
     local api = require("nvim-tree.api")
     local function resize_tree(delta)
-      local tree_win = api.tree.get_tree_win()
+      local tree_win = api.tree.winid()
       if tree_win and vim.api.nvim_win_is_valid(tree_win) then
         local current_width = vim.api.nvim_win_get_width(tree_win)
         local new_width = math.max(10, math.min(100, current_width + delta))
@@ -89,28 +94,117 @@ return {
     end
     
     -- nvim-treeバッファ内でのみ有効なキーマッピング
-    vim.api.nvim_create_autocmd("FileType", {
-      pattern = "NvimTree",
-      callback = function(args)
-        local buf = args.buf
+    local function setup_tree_keymaps(buf)
+      -- バッファが有効かどうかを確認
+      if not vim.api.nvim_buf_is_valid(buf) then
+        return
+      end
+      
+      -- 即座に設定（最初の設定）
+      local function set_keymaps_immediately()
+        if not vim.api.nvim_buf_is_valid(buf) then
+          return
+        end
+        
+        -- 既存のキーマッピングを削除
+        pcall(vim.api.nvim_buf_del_keymap, buf, "n", "-")
+        pcall(vim.api.nvim_buf_del_keymap, buf, "n", ">")
+        pcall(vim.api.nvim_buf_del_keymap, buf, "n", "<gt>")
+        pcall(vim.api.nvim_buf_del_keymap, buf, "n", "<lt>")
+        pcall(vim.api.nvim_buf_del_keymap, buf, "n", "<")
+        
         -- - で幅を狭くする（-5）
-        vim.keymap.set("n", "-", function()
+        pcall(vim.keymap.set, "n", "-", function()
           resize_tree(-5)
         end, { buffer = buf, desc = "Resize tree narrower", silent = true, noremap = true, nowait = true })
         
         -- + で幅を広くする（+5）
-        vim.keymap.set("n", "+", function()
+        pcall(vim.keymap.set, "n", "+", function()
+          resize_tree(5)
+        end, { buffer = buf, desc = "Resize tree wider", silent = true, noremap = true, nowait = true })
+        
+        -- < で幅を狭くする（-5）
+        local resize_narrow_script = string.format(
+          [[<Cmd>lua local api = require('nvim-tree.api'); local win = api.tree.winid(); if win and vim.api.nvim_win_is_valid(win) then local w = vim.api.nvim_win_get_width(win); vim.api.nvim_win_set_width(win, math.max(10, math.min(100, w - 5))) end<CR>]]
+        )
+        -- 直接<を設定
+        pcall(vim.api.nvim_buf_set_keymap, buf, "n", "<", resize_narrow_script, {
+          noremap = true,
+          silent = true,
+          nowait = true,
+        })
+        -- <lt>でも設定（念のため）
+        pcall(vim.api.nvim_buf_set_keymap, buf, "n", "<lt>", resize_narrow_script, {
+          noremap = true,
+          silent = true,
+          nowait = true,
+        })
+        
+        -- > で幅を広くする（+5）
+        local resize_wide_script = string.format(
+          [[<Cmd>lua local api = require('nvim-tree.api'); local win = api.tree.winid(); if win and vim.api.nvim_win_is_valid(win) then local w = vim.api.nvim_win_get_width(win); vim.api.nvim_win_set_width(win, math.max(10, math.min(100, w + 5))) end<CR>]]
+        )
+        -- 直接>を設定
+        pcall(vim.api.nvim_buf_set_keymap, buf, "n", ">", resize_wide_script, {
+          noremap = true,
+          silent = true,
+          nowait = true,
+        })
+        
+        -- <gt>でも設定（念のため）
+        pcall(vim.keymap.set, "n", "<gt>", function()
           resize_tree(5)
         end, { buffer = buf, desc = "Resize tree wider", silent = true, noremap = true, nowait = true })
         
         -- または <C-w>< と <C-w>> でもリサイズ可能（ウィンドウリサイズの標準キー）
-        vim.keymap.set("n", "<C-w><", function()
+        pcall(vim.keymap.set, "n", "<C-w><lt>", function()
           resize_tree(-5)
         end, { buffer = buf, desc = "Resize tree narrower", silent = true, noremap = true })
         
-        vim.keymap.set("n", "<C-w>>", function()
+        pcall(vim.keymap.set, "n", "<C-w><gt>", function()
           resize_tree(5)
         end, { buffer = buf, desc = "Resize tree wider", silent = true, noremap = true })
+      end
+      
+      -- 即座に設定
+      set_keymaps_immediately()
+      
+      -- 少し待ってから再設定（nvim-treeのキーマッピングが後から設定される場合に対応）
+      vim.defer_fn(function()
+        set_keymaps_immediately()
+      end, 100)
+      
+      -- さらに少し待ってから再設定
+      vim.defer_fn(function()
+        set_keymaps_immediately()
+      end, 300)
+    end
+    
+    -- nvim-treeが開かれたときにキーマッピングを設定
+    vim.api.nvim_create_autocmd({ "FileType", "BufWinEnter" }, {
+      pattern = "NvimTree",
+      callback = function(args)
+        local buf = args.buf
+        vim.schedule(function()
+          setup_tree_keymaps(buf)
+          -- さらに少し待ってから再設定（nvim-treeのキーマッピングが後から設定される場合に対応）
+          vim.defer_fn(function()
+            setup_tree_keymaps(buf)
+          end, 100)
+        end)
+      end,
+    })
+    
+    -- nvim-treeバッファがフォーカスされたときにもキーマッピングを再設定
+    vim.api.nvim_create_autocmd("BufEnter", {
+      pattern = "NvimTree_*",
+      callback = function(args)
+        local buf = args.buf
+        if vim.bo[buf].filetype == "NvimTree" then
+          vim.schedule(function()
+            setup_tree_keymaps(buf)
+          end)
+        end
       end,
     })
     
