@@ -84,21 +84,14 @@ return {
         },
       },
       -- ルートディレクトリの検出（package.json、tsconfig.json、jsconfig.json、.gitを検出）
-      root_dir = function(fname)
-        -- fnameが数値の場合は、バッファ番号からファイル名を取得
-        if type(fname) == "number" then
-          fname = vim.api.nvim_buf_get_name(fname)
-        end
-        -- fnameが空の場合は、現在のディレクトリを使用
-        if not fname or fname == "" then
-          return vim.fn.getcwd()
-        end
+      -- vim.lsp.config の root_dir は (bufnr, on_dir) を受け取り、on_dir(ルート) を呼ぶ形で書く
+      -- （値を return しても使われず、LSP が起動しない）
+      root_dir = function(bufnr, on_dir)
         local root_files = { 'package.json', 'tsconfig.json', 'jsconfig.json', '.git' }
-        local root = vim.fs.find(root_files, { path = fname, upward = true })[1]
-        return root and vim.fs.dirname(root) or vim.fn.getcwd()
+        local root = vim.fs.root(bufnr, root_files)
+        -- ルートが見つからないときは、カレントディレクトリをルートにする（ファイル単体でも動かすため）
+        on_dir(root or vim.fn.getcwd())
       end,
-      -- 単一ファイルモードを有効化（ファイル単体でもLSPが動作するように）
-      single_file_support = true,
     })
 
     -- HTML Language Server の設定
